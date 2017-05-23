@@ -12,10 +12,9 @@ const Restaurant = require('./models/Restaurant')
 
 mongoose.connect(urlDB)
 
+app.use( (req,res,next) => {
 
-app.get('/restaurants', (req,res) => {
-
-  const { show, hide } = req.query
+  const { show, hide, limit=20, page } = req.query
   const projection = {}
 
   if (show) {
@@ -28,9 +27,23 @@ app.get('/restaurants', (req,res) => {
     fieldsToShow.forEach( field => projection[field] = 0 )
   }
 
+  req.projection = projection
+  req.limit = +limit
+  req.skip = (page-1) * limit
+
+  next()
+
+})
+
+
+app.get('/restaurants', (req,res) => {
+
+  const { projection, limit, skip } = req
+
   Restaurant
     .find( {}, projection )
-    .limit(20)
+    .limit(limit)
+    .skip(skip)
     .then( restaurants => {
       res.json(restaurants)
     })
@@ -40,13 +53,59 @@ app.get('/restaurants', (req,res) => {
 app.get('/restaurants/borough/:borough', (req,res) => {
 
   const { borough } = req.params
+  const { projection, limit, skip } = req
 
   Restaurant
-    .find( { borough } )
-    .limit(20)
+    .find( { borough }, projection )
+    .limit(limit)
+    .skip(skip)
     .then( restaurants => {
       res.json(restaurants)
     })
+
+})
+
+app.get('/restaurants/cuisine/:cuisine', (req,res) => {
+
+  const { cuisine } = req.params
+  const { projection, limit, skip } = req
+
+  Restaurant
+    .find( { cuisine }, projection )
+    .limit(limit)
+    .skip(skip)
+    .then( restaurants => {
+      res.json(restaurants)
+    })
+
+})
+
+app.get('/restaurants/cuisine/not/:cuisine', (req,res) => {
+
+  const { cuisine } = req.params
+  const { projection, limit, skip } = req
+
+  Restaurant
+    .find( { cuisine: { $ne: cuisine } }, projection )
+    .limit(limit)
+    .skip(skip)
+    .then( restaurants => {
+      res.json(restaurants)
+    })
+
+})
+
+app.get('/restaurant/:id', (req,res) => {
+
+  const { id } = req.params
+  const { projection } = req
+
+  Restaurant
+    .findById(id , projection)
+    .then( restaurant => {
+      res.json(restaurant)
+    })
+
 
 })
 
