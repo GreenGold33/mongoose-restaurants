@@ -37,6 +37,19 @@ app.get('/restaurants', (req,res) => {
 
 })
 
+app.get('/restaurants/borough/:borough', (req,res) => {
+
+  const { borough } = req.params
+
+  Restaurant
+    .find( { borough } )
+    .limit(20)
+    .then( restaurants => {
+      res.json(restaurants)
+    })
+
+})
+
 app.listen(PORT)
 console.log(`Listening on PORT ${PORT}`);
 
